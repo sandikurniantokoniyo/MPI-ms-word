@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Pembelajaran Informatika - MTsN 2 Kab. Gorontalo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Canvas Confetti Library for Celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        word: {
+                            light: '#4274c4',
+                            DEFAULT: '#2b579a',
+                            dark: '#1e3e6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            scroll-behavior: smooth;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 12px 28px -5px rgba(43, 87, 154, 0.3);
+        }
+
+        /* Ambient Blob Animations */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 8s infinite ease-in-out;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+
+        @keyframes eqBar {
+            0%, 100% { height: 4px; }
+            50% { height: 16px; }
+        }
+        .eq-bar-1 { animation: eqBar 0.6s ease-in-out infinite; }
+        .eq-bar-2 { animation: eqBar 0.8s ease-in-out infinite 0.2s; }
+        .eq-bar-3 { animation: eqBar 0.5s ease-in-out infinite 0.4s; }
+
+        .radio-custom:checked + div {
+            background-color: #ebf5ff;
+            border-color: #2b579a;
+            box-shadow: 0 0 0 2px rgba(43, 87, 154, 0.2);
+        }
+        .radio-custom:checked + div .circle {
+            background-color: #2b579a;
+            border-color: #2b579a;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col justify-between relative overflow-x-hidden">
+
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden opacity-40">
+        <div class="absolute top-10 left-10 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+        <div class="absolute top-1/3 right-10 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-10 left-1/3 w-80 h-80 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <div class="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-gray-900/85 backdrop-blur-md text-white p-2.5 rounded-2xl shadow-2xl border border-white/20 transition-all hover:scale-105">
+        <button id="bgm-toggle-btn" onclick="toggleBGM()" class="w-10 h-10 rounded-xl bg-word flex items-center justify-center text-white hover:bg-word-dark transition shadow-md relative group" title="Putar/Hentikan Musik Semangat">
+            <i id="bgm-icon" class="fa-solid fa-music text-sm"></i>
+        </button>
+        
+        <div id="visualizer" class="hidden flex items-end gap-1 h-5 px-1.5 border-r border-white/20">
+            <span class="w-1 bg-green-400 rounded-full eq-bar-1"></span>
+            <span class="w-1 bg-yellow-400 rounded-full eq-bar-2"></span>
+            <span class="w-1 bg-blue-400 rounded-full eq-bar-3"></span>
+        </div>
+
+        <div class="flex flex-col pr-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-blue-300">Musik Semangat</span>
+            <span id="bgm-status" class="text-[11px] font-medium text-gray-300">Mati</span>
+        </div>
+
+        <button onclick="toggleMuteSFX()" id="sfx-toggle-btn" class="text-xs text-gray-400 hover:text-white p-1.5 rounded-lg transition" title="Suara Efek">
+            <i id="sfx-icon" class="fa-solid fa-volume-high"></i>
+        </button>
+    </div>
+
+    <header class="bg-word text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3 text-center md:text-left">
+                    <div class="bg-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
+                        <i class="fa-solid fa-file-word text-word text-3xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold leading-tight">Informatika Kelas IX</h1>
+                        <p class="text-blue-200 text-xs sm:text-sm font-medium">MTs Negeri 2 Kabupaten Gorontalo</p>
+                    </div>
+                </div>
+                <div class="text-center md:text-right bg-word-dark/80 px-4 py-2.5 rounded-xl border border-word-light/40 w-full md:w-auto">
+                    <p class="text-[10px] text-blue-200 uppercase tracking-widest font-semibold mb-0.5">Pengajar</p>
+                    <p class="text-sm font-semibold flex items-center justify-center md:justify-end gap-2">
+                        <img src="https://iili.io/nV4kv3X.md.jpg" alt="Foto Sandi Kurnianto Koniyo, S.Pd" class="w-6 h-6 rounded-full object-cover border border-blue-200 shadow-sm" onerror="this.remove()">
+                        <span>Sandi Kurnianto Koniyo, S.Pd</span>
+                    </p>
+                    <button onclick="openSpreadsheetConfig()" class="mt-2 text-xs bg-white/15 hover:bg-white/25 text-white py-1 px-3 rounded-lg flex items-center gap-1.5 mx-auto md:ml-auto transition border border-white/20">
+                        <i class="fa-solid fa-table-cells text-green-300"></i> Atur Google Sheets
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <nav class="bg-word-dark border-t border-word/40">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-center flex-wrap space-x-1 sm:space-x-6">
+                    <button onclick="switchTab('beranda')" id="tab-beranda" class="tab-btn px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold text-white border-b-4 border-white transition-colors duration-200 flex items-center gap-1.5 sm:gap-2">
+                        <i class="fa-solid fa-house"></i><span>Beranda</span>
+                    </button>
+                    <button onclick="switchTab('materi')" id="tab-materi" class="tab-btn px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold text-blue-200 border-b-4 border-transparent hover:text-white hover:border-blue-300 transition-colors duration-200 flex items-center gap-1.5 sm:gap-2">
+                        <i class="fa-solid fa-book-open"></i><span>Materi</span>
+                    </button>
+                    <button onclick="switchTab('evaluasi')" id="tab-evaluasi" class="tab-btn px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold text-blue-200 border-b-4 border-transparent hover:text-white hover:border-blue-300 transition-colors duration-200 flex items-center gap-1.5 sm:gap-2">
+                        <i class="fa-solid fa-list-check"></i><span>Evaluasi</span>
+                    </button>
+                    <button onclick="switchTab('pengembang')" id="tab-pengembang" class="tab-btn px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold text-blue-200 border-b-4 border-transparent hover:text-white hover:border-blue-300 transition-colors duration-200 flex items-center gap-1.5 sm:gap-2">
+                        <i class="fa-solid fa-user-gear"></i><span>Pengembang</span>
+                    </button>
+                    <button onclick="switchTab('pustaka')" id="tab-pustaka" class="tab-btn px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold text-blue-200 border-b-4 border-transparent hover:text-white hover:border-blue-300 transition-colors duration-200 flex items-center gap-1.5 sm:gap-2">
+                        <i class="fa-solid fa-book-bookmark"></i><span>Daftar Pustaka</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- BERANDA SECTION -->
+        <section id="content-beranda" class="tab-content active">
+
+            <!-- Running Text -->
+            <div class="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-gray-900 px-4 py-2.5 rounded-xl shadow-md mb-6 flex items-center gap-3 border border-amber-300">
+                <div class="bg-amber-900 text-amber-100 font-bold text-xs uppercase px-2.5 py-1 rounded-lg flex items-center gap-1.5 flex-shrink-0 shadow-sm">
+                    <i class="fa-solid fa-bullhorn text-yellow-300 animate-bounce"></i> Pengumuman
+                </div>
+                <div class="overflow-hidden w-full">
+                    <marquee behavior="scroll" direction="left" scrollamount="6" class="font-semibold text-xs sm:text-sm tracking-wide flex items-center">
+                        📢 Selamat Datang di Media Pembelajaran Interaktif Informatika Kelas IX MTs Negeri 2 Kabupaten Gorontalo! Tetap semangat, pelajari materi Microsoft Word, dan kerjakan kuis evaluasinya bersama Pengajar Sandi Kurnianto Koniyo, S.Pd! 🚀✨
+                    </marquee>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div class="bg-gradient-to-r from-word via-blue-700 to-indigo-800 p-8 sm:p-12 text-center text-white relative">
+                    <div class="max-w-3xl mx-auto relative z-10">
+                        <div class="inline-block mb-4 transform hover:scale-105 transition-transform duration-300">
+                            <span class="bg-amber-400 text-word-dark font-black text-base sm:text-xl uppercase px-5 py-2 rounded-full shadow-lg border-2 border-white tracking-wider flex items-center justify-center gap-2 animate-pulse">
+                                <i class="fa-solid fa-rocket text-word-dark"></i> Ayoo belajar donggg!!! <i class="fa-solid fa-sparkles text-amber-800"></i>
+                            </span>
+                        </div>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold mb-4 leading-tight">Pengolahan Dokumen dengan Microsoft Word</h2>
+                        <p class="text-base sm:text-lg text-blue-100 mb-8 max-w-2xl mx-auto leading-relaxed">
+                            Selamat datang di media pembelajaran Informatika! Di sini kamu akan mempelajari fondasi penting penggunaan Microsoft Word untuk menyusun tugas sekolah, laporan, hingga karya tulis secara profesional.
+                        </p>
+                        <div class="flex flex-wrap justify-center gap-4">
+                            <button onclick="switchTab('materi')" class="bg-white text-word font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-blue-50 transform hover:-translate-y-0.5 transition duration-200 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-book-open"></i> Mulai Belajar
+                            </button>
+                            <button onclick="switchTab('evaluasi')" class="bg-word-dark border border-white/30 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-word-dark/80 transform hover:-translate-y-0.5 transition duration-200 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-pen-to-square"></i> Kuis Evaluasi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 sm:p-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center p-6 bg-blue-50/70 rounded-xl border border-blue-100 card-hover">
+                        <div class="w-14 h-14 bg-word/10 text-word rounded-xl flex items-center justify-center mx-auto mb-4 text-2xl font-bold transition transform hover:rotate-6">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">Materi Lengkap</h3>
+                        <p class="text-sm text-gray-600 leading-relaxed">Mencakup 7 sub-materi inti mulai dari antarmuka dasar, format teks, paragraf, hingga penyisipan objek.</p>
+                    </div>
+                    <div class="text-center p-6 bg-blue-50/70 rounded-xl border border-blue-100 card-hover">
+                        <div class="w-14 h-14 bg-word/10 text-word rounded-xl flex items-center justify-center mx-auto mb-4 text-2xl font-bold transition transform hover:rotate-6">
+                            <i class="fa-solid fa-laptop-code"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">Desain Interaktif</h3>
+                        <p class="text-sm text-gray-600 leading-relaxed">Navigasi intuitif yang ramah pengguna di HP, tablet, maupun komputer kelas.</p>
+                    </div>
+                    <div class="text-center p-6 bg-blue-50/70 rounded-xl border border-blue-100 card-hover">
+                        <div class="w-14 h-14 bg-word/10 text-word rounded-xl flex items-center justify-center mx-auto mb-4 text-2xl font-bold transition transform hover:rotate-6">
+                            <i class="fa-solid fa-square-check"></i>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2 text-gray-800">Evaluasi Otomatis</h3>
+                        <p class="text-sm text-gray-600 leading-relaxed">15 Soal ujian (10 PG + 5 Benar/Salah) dengan rekap skor otomatis ke Spreadsheet Guru.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MATERI SECTION -->
+        <section id="content-materi" class="tab-content">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 border-l-4 border-word pl-3 flex items-center gap-2">
+                    <i class="fa-solid fa-book text-word"></i> Materi Pembelajaran: Microsoft Word
+                </h2>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Sidebar Nav Materi -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-4 sticky top-24">
+                        <h3 class="font-bold text-gray-700 mb-3 uppercase text-xs tracking-wider flex items-center gap-2 border-b pb-2">
+                            <i class="fa-solid fa-list-ul text-word"></i> Daftar Bab Materi
+                        </h3>
+                        <ul class="space-y-1.5 flex flex-col" id="materi-nav">
+                            <li><button onclick="showMateri('bab1')" class="w-full text-left px-3.5 py-2.5 rounded-lg bg-word text-white font-semibold text-sm transition-all materi-btn" data-target="bab1">1. Pengenalan Word</button></li>
+                            <li><button onclick="showMateri('bab2')" class="w-full text-left px-3.5 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-all materi-btn" data-target="bab2">2. Antarmuka (Interface)</button></li>
+                            <li><button onclick="showMateri('bab3')" class="w-full text-left px-3.5 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-all materi-btn" data-target="bab3">3. Manajemen Dokumen</button></li>
+                            <li><button onclick="showMateri('bab4')" class="w-full text-left px-3.5 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-all materi-btn" data-target="bab4">4. Format Teks & Paragraf</button></li>
+                            <li><button onclick="showMateri('bab5')" class="w-full text-left px-3.5 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-all materi-btn" data-target="bab5">5. Sisipkan Objek (Insert)</button></li>
+                            <li><button onclick="showMateri('bab6')" class="w-full text-left px-3.5 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-all materi-btn" data-target="bab6">6. Page Layout & Margin</button></li>
+                            <li><button onclick="showMateri('bab7')" class="w-full text-left px-3.5 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-all materi-btn" data-target="bab7">7. Shortcut Keyboard</button></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-3">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 sm:p-8 min-h-[480px] flex flex-col justify-between">
+                        <div>
+                            <!-- BAB 1 -->
+                            <div id="bab1" class="materi-section">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="bg-word text-white p-3 rounded-xl shadow-sm"><i class="fa-solid fa-circle-info text-xl"></i></div>
+                                    <h3 class="text-2xl font-bold text-gray-800">1. Pengenalan Microsoft Word</h3>
+                                </div>
+                                <hr class="mb-6 border-gray-200">
+                                <p class="text-gray-700 mb-4 text-base sm:text-lg leading-relaxed">
+                                    <strong>Microsoft Word</strong> adalah perangkat lunak pengolah kata (<em>word processor</em>) terpopuler yang dikembangkan oleh Microsoft. Aplikasi ini merupakan bagian utama dari paket aplikasi perkantoran Microsoft Office.
+                                </p>
+                                <h4 class="font-bold text-gray-800 mt-6 mb-3 text-lg flex items-center gap-2">
+                                    <i class="fa-solid fa-list-check text-word"></i> Fungsi-Fungsi Utama Microsoft Word:
+                                </h4>
+                                <ul class="space-y-3 text-gray-700 list-none mb-6">
+                                    <li class="flex items-start bg-gray-50 p-3 rounded-lg border border-gray-100"><i class="fa-solid fa-circle-check text-green-600 mt-1 mr-3 flex-shrink-0"></i> <span><strong>Membuat Dokumen Baru:</strong> Digunakan untuk menyusun surat, laporan, makalah tugas sekolah, proposal, hingga buku.</span></li>
+                                    <li class="flex items-start bg-gray-50 p-3 rounded-lg border border-gray-100"><i class="fa-solid fa-circle-check text-green-600 mt-1 mr-3 flex-shrink-0"></i> <span><strong>Mengedit Naskah:</strong> Memudahkan mengoreksi ejaan kata, mengubah kalimat, dan menyusun kembali susunan tulisan.</span></li>
+                                    <li class="flex items-start bg-gray-50 p-3 rounded-lg border border-gray-100"><i class="fa-solid fa-circle-check text-green-600 mt-1 mr-3 flex-shrink-0"></i> <span><strong>Memformat Teks:</strong> Memperindah penampilan dokumen dengan variasi jenis huruf, warna, ukuran, dan jarak antarbaris.</span></li>
+                                    <li class="flex items-start bg-gray-50 p-3 rounded-lg border border-gray-100"><i class="fa-solid fa-circle-check text-green-600 mt-1 mr-3 flex-shrink-0"></i> <span><strong>Mencetak Dokumen (Printing):</strong> Mengatur ukuran kertas dan pencetakan file fisik dengan rapi.</span></li>
+                                </ul>
+                                <div class="bg-blue-50 border-l-4 border-word p-4 rounded-r-xl">
+                                    <p class="text-sm text-blue-900 leading-relaxed">
+                                        <strong class="font-bold"><i class="fa-solid fa-lightbulb text-yellow-500 mr-1"></i> Catatan Format File:</strong> Format ekstensi standar file dokumen Microsoft Word versi modern (2007 ke atas) adalah <strong class="text-word font-mono">.docx</strong>. Sedangkan versi lama (2003 ke bawah) menggunakan format <strong class="text-word font-mono">.doc</strong>.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- BAB 2 -->
+                            <div id="bab2" class="materi-section hidden">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="bg-word text-white p-3 rounded-xl shadow-sm"><i class="fa-solid fa-desktop text-xl"></i></div>
+                                    <h3 class="text-2xl font-bold text-gray-800">2. Antarmuka (Interface) Word</h3>
+                                </div>
+                                <hr class="mb-6 border-gray-200">
+                                <p class="text-gray-700 mb-4">Mengenal bagian-bagian pada layar kerja Microsoft Word sangat penting agar kerja lebih efisien:</p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="p-4 border border-gray-200 rounded-xl bg-gray-50 hover:border-word transition">
+                                        <h4 class="font-bold text-word text-base mb-1 flex items-center gap-2"><i class="fa-solid fa-bolt"></i> Quick Access Toolbar</h4>
+                                        <p class="text-gray-600 text-xs sm:text-sm">Terletak di pojok kiri atas. Berisi tombol pintas seperti <em>Save</em>, <em>Undo</em>, dan <em>Redo</em>.</p>
+                                    </div>
+                                    <div class="p-4 border border-gray-200 rounded-xl bg-gray-50 hover:border-word transition">
+                                        <h4 class="font-bold text-word text-base mb-1 flex items-center gap-2"><i class="fa-solid fa-heading"></i> Title Bar (Baris Judul)</h4>
+                                        <p class="text-gray-600 text-xs sm:text-sm">Menampilkan nama file dokumen yang sedang aktif terbuka di bagian atas layar.</p>
+                                    </div>
+                                    <div class="p-4 border border-gray-200 rounded-xl bg-gray-50 hover:border-word transition">
+                                        <h4 class="font-bold text-word text-base mb-1 flex items-center gap-2"><i class="fa-solid fa-bars-staggered"></i> Ribbon</h4>
+                                        <p class="text-gray-600 text-xs sm:text-sm">Area menu utama yang berisi Tab (Home, Insert, Layout) dan grup ikon perintah.</p>
+                                    </div>
+                                    <div class="p-4 border border-gray-200 rounded-xl bg-gray-50 hover:border-word transition">
+                                        <h4 class="font-bold text-word text-base mb-1 flex items-center gap-2"><i class="fa-solid fa-ruler-horizontal"></i> Ruler (Penggaris)</h4>
+                                        <p class="text-gray-600 text-xs sm:text-sm">Penggaris horizontal & vertikal untuk mengatur perataan paragraf dan batas margin.</p>
+                                    </div>
+                                    <div class="p-4 border border-gray-200 rounded-xl bg-gray-50 hover:border-word transition">
+                                        <h4 class="font-bold text-word text-base mb-1 flex items-center gap-2"><i class="fa-regular fa-file"></i> Document Area</h4>
+                                        <p class="text-gray-600 text-xs sm:text-sm">Lembar kerja putih utama tempat mengetik teks dan memasukkan objek visual.</p>
+                                    </div>
+                                    <div class="p-4 border border-gray-200 rounded-xl bg-gray-50 hover:border-word transition">
+                                        <h4 class="font-bold text-word text-base mb-1 flex items-center gap-2"><i class="fa-solid fa-chart-simple"></i> Status Bar</h4>
+                                        <p class="text-gray-600 text-xs sm:text-sm">Bilah di bawah layar yang menunjukkan nomor halaman, jumlah kata, dan tombol Zoom.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- BAB 3 -->
+                            <div id="bab3" class="materi-section hidden">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="bg-word text-white p-3 rounded-xl shadow-sm"><i class="fa-solid fa-folder-open text-xl"></i></div>
+                                    <h3 class="text-2xl font-bold text-gray-800">3. Manajemen Dokumen Dasar</h3>
+                                </div>
+                                <hr class="mb-6 border-gray-200">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                        <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-file-circle-plus text-word"></i> Membuat Dokumen Baru</h4>
+                                        <p class="text-xs text-gray-600 mb-2">Langkah: Tab <strong>File</strong> &gt; <strong>New</strong> &gt; <strong>Blank Document</strong>.</p>
+                                        <span class="text-xs font-mono font-bold bg-blue-100 text-word px-2 py-1 rounded">Shortcut: Ctrl + N</span>
+                                    </div>
+                                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                        <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-floppy-disk text-word"></i> Menyimpan Dokumen</h4>
+                                        <p class="text-xs text-gray-600 mb-2">Langkah: Tab <strong>File</strong> &gt; <strong>Save</strong> / <strong>Save As</strong>.</p>
+                                        <span class="text-xs font-mono font-bold bg-blue-100 text-word px-2 py-1 rounded">Shortcut: Ctrl + S</span>
+                                    </div>
+                                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                        <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open text-word"></i> Membuka File Simpanan</h4>
+                                        <p class="text-xs text-gray-600 mb-2">Langkah: Tab <strong>File</strong> &gt; <strong>Open</strong> &gt; Pilih lokasi file.</p>
+                                        <span class="text-xs font-mono font-bold bg-blue-100 text-word px-2 py-1 rounded">Shortcut: Ctrl + O</span>
+                                    </div>
+                                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                        <h4 class="font-bold text-gray-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-print text-word"></i> Mencetak Hasil</h4>
+                                        <p class="text-xs text-gray-600 mb-2">Langkah: Tab <strong>File</strong> &gt; <strong>Print</strong> &gt; Pilih Printer.</p>
+                                        <span class="text-xs font-mono font-bold bg-blue-100 text-word px-2 py-1 rounded">Shortcut: Ctrl + P</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- BAB 4 -->
+                            <div id="bab4" class="materi-section hidden">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="bg-word text-white p-3 rounded-xl shadow-sm"><i class="fa-solid fa-font text-xl"></i></div>
+                                    <h3 class="text-2xl font-bold text-gray-800">4. Format Teks & Paragraf</h3>
+                                </div>
+                                <hr class="mb-6 border-gray-200">
+                                <p class="text-gray-700 mb-4 text-sm">Semua fitur pemformatan huruf dan perataan paragraf ini terletak pada <strong>Tab Home</strong>.</p>
+                                
+                                <h4 class="font-bold text-word text-base mb-3">1. Pemformatan Huruf (Grup Font)</h4>
+                                <div class="overflow-x-auto mb-6 border rounded-xl">
+                                    <table class="min-w-full text-xs sm:text-sm text-left text-gray-600">
+                                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                            <tr>
+                                                <th class="px-4 py-2.5">Fitur / Ikon</th>
+                                                <th class="px-4 py-2.5">Fungsi Perintah</th>
+                                                <th class="px-4 py-2.5">Shortcut Keyboard</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                            <tr><td class="px-4 py-2 font-bold text-gray-800">B (Bold)</td><td class="px-4 py-2">Menebalkan teks</td><td class="px-4 py-2 font-mono text-word font-bold">Ctrl + B</td></tr>
+                                            <tr><td class="px-4 py-2 italic font-bold text-gray-800">I (Italic)</td><td class="px-4 py-2">Memiringkan teks</td><td class="px-4 py-2 font-mono text-word font-bold">Ctrl + I</td></tr>
+                                            <tr><td class="px-4 py-2 underline font-bold text-gray-800">U (Underline)</td><td class="px-4 py-2">Memberi garis bawah teks</td><td class="px-4 py-2 font-mono text-word font-bold">Ctrl + U</td></tr>
+                                            <tr><td class="px-4 py-2 text-gray-800 font-bold">Font Family</td><td class="px-4 py-2">Mengubah jenis huruf (misal: Arial, Times New Roman)</td><td class="px-4 py-2 font-mono text-gray-400">-</td></tr>
+                                            <tr><td class="px-4 py-2 text-gray-800 font-bold">Font Size</td><td class="px-4 py-2">Mengatur ukuran besar/kecil huruf</td><td class="px-4 py-2 font-mono text-word font-bold">Ctrl + ] / [</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <h4 class="font-bold text-word text-base mb-3">2. Perataan Paragraf (Grup Paragraph)</h4>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div class="bg-gray-50 border p-3 rounded-xl text-center">
+                                        <i class="fa-solid fa-align-left text-xl text-word mb-1"></i>
+                                        <p class="font-bold text-xs">Align Left</p>
+                                        <p class="text-[11px] text-gray-500">Rata Kiri</p>
+                                        <span class="text-[10px] font-mono text-word font-bold">Ctrl + L</span>
+                                    </div>
+                                    <div class="bg-gray-50 border p-3 rounded-xl text-center">
+                                        <i class="fa-solid fa-align-center text-xl text-word mb-1"></i>
+                                        <p class="font-bold text-xs">Center</p>
+                                        <p class="text-[11px] text-gray-500">Rata Tengah</p>
+                                        <span class="text-[10px] font-mono text-word font-bold">Ctrl + E</span>
+                                    </div>
+                                    <div class="bg-gray-50 border p-3 rounded-xl text-center">
+                                        <i class="fa-solid fa-align-right text-xl text-word mb-1"></i>
+                                        <p class="font-bold text-xs">Align Right</p>
+                                        <p class="text-[11px] text-gray-500">Rata Kanan</p>
+                                        <span class="text-[10px] font-mono text-word font-bold">Ctrl + R</span>
+                                    </div>
+                                    <div class="bg-gray-50 border p-3 rounded-xl text-center">
+                                        <i class="fa-solid fa-align-justify text-xl text-word mb-1"></i>
+                                        <p class="font-bold text-xs">Justify</p>
+                                        <p class="text-[11px] text-gray-500">Rata Kiri Kanan</p>
+                                        <span class="text-[10px] font-mono text-word font-bold">Ctrl + J</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- BAB 5 -->
+                            <div id="bab5" class="materi-section hidden">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="bg-word text-white p-3 rounded-xl shadow-sm"><i class="fa-solid fa-file-circle-plus text-xl"></i></div>
+                                    <h3 class="text-2xl font-bold text-gray-800">5. Menyisipkan Objek (Tab Insert)</h3>
+                                </div>
+                                <hr class="mb-6 border-gray-200">
+                                <p class="text-gray-700 mb-4 text-sm">Tab <strong>Insert</strong> berfungsi menyisipkan elemen visual dan tabel ke dalam dokumen:</p>
+                                
+                                <div class="space-y-3">
+                                    <div class="flex items-start bg-gray-50 p-3.5 rounded-xl border border-gray-100">
+                                        <div class="p-2.5 bg-blue-100 text-word rounded-lg mr-3 text-lg"><i class="fa-solid fa-table"></i></div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm">Table (Tabel)</h4>
+                                            <p class="text-xs text-gray-600">Membuat susunan data berkolom dan berbaris agar disajikan secara tertata.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start bg-gray-50 p-3.5 rounded-xl border border-gray-100">
+                                        <div class="p-2.5 bg-blue-100 text-word rounded-lg mr-3 text-lg"><i class="fa-solid fa-image"></i></div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm">Pictures (Gambar)</h4>
+                                            <p class="text-xs text-gray-600">Memasukkan foto atau berkas gambar dari penyimpanan komputer ke lembar kerja.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start bg-gray-50 p-3.5 rounded-xl border border-gray-100">
+                                        <div class="p-2.5 bg-blue-100 text-word rounded-lg mr-3 text-lg"><i class="fa-solid fa-shapes"></i></div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm">Shapes (Bentuk Geometris)</h4>
+                                            <p class="text-xs text-gray-600">Menyisipkan garis, panah, diagram kotak, lingkaran, bintang, dan bentuk visual lainnya.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start bg-gray-50 p-3.5 rounded-xl border border-gray-100">
+                                        <div class="p-2.5 bg-blue-100 text-word rounded-lg mr-3 text-lg"><i class="fa-solid fa-chart-column"></i></div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 text-sm">Chart (Grafik Data)</h4>
+                                            <p class="text-xs text-gray-600">Visualisasi statistik angka dalam grafik batang, garis, atau diagram lingkaran (pie).</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- BAB 6 -->
+                            <div id="bab6" class="materi-section hidden">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="bg-word text-white p-3 rounded-xl shadow-sm"><i class="fa-solid fa-sliders text-xl"></i></div>
+                                    <h3 class="text-2xl font-bold text-gray-800">6. Layout & Ukuran Halaman</h3>
+                                </div>
+                                <hr class="mb-6 border-gray-200">
+                                <p class="text-gray-700 mb-4 text-sm">Pengaturan ukuran kertas dan tata letak terdapat pada menu <strong>Tab Layout</strong>:</p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="bg-gray-50 border p-4 rounded-xl text-center">
+                                        <i class="fa-solid fa-border-top-left text-3xl text-word mb-2"></i>
+                                        <h4 class="font-bold text-gray-800 text-sm mb-1">Margins (Batas Tepi)</h4>
+                                        <p class="text-xs text-gray-600">Mengatur jarak kosong tepi kertas (Top, Bottom, Left, Right) ke teks.</p>
+                                    </div>
+                                    <div class="bg-gray-50 border p-4 rounded-xl text-center">
+                                        <i class="fa-solid fa-arrows-rotate text-3xl text-word mb-2"></i>
+                                        <h4 class="font-bold text-gray-800 text-sm mb-1">Orientation (Arah)</h4>
+                                        <p class="text-xs text-gray-600">Pilihan posisi cetak kertas: <strong>Portrait</strong> (Tegak) atau <strong>Landscape</strong> (Mendatar).</p>
+                                    </div>
+                                    <div class="bg-gray-50 border p-4 rounded-xl text-center">
+                                        <i class="fa-solid fa-file-lines text-3xl text-word mb-2"></i>
+                                        <h4 class="font-bold text-gray-800 text-sm mb-1">Size (Ukuran Kertas)</h4>
+                                        <p class="text-xs text-gray-600">Menentukan jenis ukuran fisik kertas cetak seperti A4, Letter, Legal, F4.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- BAB 7 -->
+                            <div id="bab7" class="materi-section hidden">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="bg-word text-white p-3 rounded-xl shadow-sm"><i class="fa-regular fa-keyboard text-xl"></i></div>
+                                    <h3 class="text-2xl font-bold text-gray-800">7. Shortcut Keyboard Penting</h3>
+                                </div>
+                                <hr class="mb-6 border-gray-200">
+                                <p class="text-gray-700 mb-4 text-sm">Penguasaan kombinasi tombol keyboard membuat pengetikan menjadi jauh lebih cepat:</p>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+                                        <span class="text-gray-700">Membatalkan Perintah (Undo)</span>
+                                        <span class="font-mono bg-white px-2 py-1 rounded border shadow-sm font-bold text-red-600">Ctrl + Z</span>
+                                    </div>
+                                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+                                        <span class="text-gray-700">Mengulang Perintah (Redo)</span>
+                                        <span class="font-mono bg-white px-2 py-1 rounded border shadow-sm font-bold text-blue-600">Ctrl + Y</span>
+                                    </div>
+                                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+                                        <span class="text-gray-700">Menyalin Objek (Copy)</span>
+                                        <span class="font-mono bg-white px-2 py-1 rounded border shadow-sm font-bold text-gray-800">Ctrl + C</span>
+                                    </div>
+                                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+                                        <span class="text-gray-700">Menempel Objek (Paste)</span>
+                                        <span class="font-mono bg-white px-2 py-1 rounded border shadow-sm font-bold text-gray-800">Ctrl + V</span>
+                                    </div>
+                                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+                                        <span class="text-gray-700">Memotong Objek (Cut)</span>
+                                        <span class="font-mono bg-white px-2 py-1 rounded border shadow-sm font-bold text-gray-800">Ctrl + X</span>
+                                    </div>
+                                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
+                                        <span class="text-gray-700">Memilih Semua Teks (Select All)</span>
+                                        <span class="font-mono bg-white px-2 py-1 rounded border shadow-sm font-bold text-gray-800">Ctrl + A</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Controls within Materi -->
+                        <div class="mt-8 pt-4 border-t flex justify-between">
+                            <button id="btn-prev-materi" onclick="navigateMateri(-1)" class="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition text-sm flex items-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                                <i class="fa-solid fa-arrow-left"></i> Sebelumnya
+                            </button>
+                            <button id="btn-next-materi" onclick="navigateMateri(1)" class="px-4 py-2 bg-word text-white font-semibold rounded-lg hover:bg-word-dark transition text-sm flex items-center gap-2">
+                                Selanjutnya <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EVALUASI SECTION -->
+        <section id="content-evaluasi" class="tab-content">
+            <!-- Quiz Start / Intro Card -->
+            <div id="quiz-intro" class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 max-w-2xl mx-auto text-center p-6 sm:p-10">
+                <div class="w-16 h-16 bg-blue-100 text-word rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                    <i class="fa-solid fa-clipboard-question"></i>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Kuis Evaluasi Informatika</h2>
+                <p class="text-gray-600 text-sm mb-6">Uji pemahamanmu mengenai Microsoft Word (15 Soal: 10 Pilihan Ganda & 5 Benar/Salah).</p>
+                
+                <!-- Form Identitas Siswa -->
+                <div class="bg-blue-50/70 border border-blue-200 p-5 rounded-xl text-left mb-6 shadow-sm">
+                    <h3 class="font-bold text-gray-800 text-sm mb-3 flex items-center gap-2 border-b border-blue-200/60 pb-2">
+                        <i class="fa-solid fa-user-graduate text-word"></i> Isi Identitas Siswa
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Nama Lengkap Siswa <span class="text-red-500">*</span></label>
+                            <input type="text" id="student-name" placeholder="Contoh: Ahmad Rizky" class="w-full px-3.5 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-word focus:border-transparent outline-none transition text-sm bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">Kelas <span class="text-red-500">*</span></label>
+                            <input type="text" id="student-class" placeholder="Contoh: IX-1 / IX-A" class="w-full px-3.5 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-word focus:border-transparent outline-none transition text-sm bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-left mb-6 text-xs text-amber-800 flex items-start gap-2.5">
+                    <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 text-base"></i>
+                    <div>
+                        <strong class="font-bold block mb-0.5">Petunjuk Pengerjaan:</strong>
+                        <p>Pastikan nama dan kelas terisi. Jawaban dan skor akhirmu akan dikirimkan secara otomatis ke Google Spreadsheet guru setelah selesai.</p>
+                    </div>
+                </div>
+                
+                <button onclick="startQuiz()" class="bg-word text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-word-dark transform hover:-translate-y-0.5 transition text-base w-full sm:w-auto flex items-center justify-center gap-2 mx-auto">
+                    <i class="fa-solid fa-play"></i> Mulai Kerjakan Soal
+                </button>
+            </div>
+
+            <!-- Quiz Active Area -->
+            <div id="quiz-area" class="hidden max-w-2xl mx-auto">
+                <div class="mb-4 bg-white p-4 rounded-xl shadow-sm border">
+                    <div class="flex justify-between items-center text-xs font-semibold text-gray-600 mb-2">
+                        <span id="quiz-progress-text">Soal 1 dari 15</span>
+                        <span id="quiz-type-badge" class="bg-blue-100 text-word px-2.5 py-1 rounded-full">Pilihan Ganda</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="quiz-progress-bar" class="bg-word h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8">
+                    <h3 id="question-text" class="text-base sm:text-lg font-bold text-gray-800 mb-6 leading-relaxed">
+                        Pertanyaan kuis akan ditampilkan di sini...
+                    </h3>
+                    
+                    <div id="options-container" class="space-y-3">
+                        <!-- Options generated dynamically -->
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-6">
+                    <button id="btn-quiz-prev" onclick="prevQuestion()" class="px-5 py-2.5 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-left"></i> Kembali
+                    </button>
+                    <div class="flex-grow"></div>
+                    <button id="btn-quiz-next" onclick="nextQuestion()" class="px-5 py-2.5 bg-word text-white font-semibold rounded-lg hover:bg-word-dark transition text-sm flex items-center gap-2">
+                        Lanjut <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button id="btn-quiz-submit" onclick="submitQuiz()" class="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition text-sm flex items-center gap-2 hidden">
+                        Kumpulkan <i class="fa-solid fa-check"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz Result View -->
+            <div id="quiz-result" class="hidden max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 p-6 sm:p-10 text-center">
+                <div id="result-icon" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl text-white bg-green-500 shadow-md">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+
+                <h3 class="text-2xl font-bold text-gray-800 mb-1">Evaluasi Selesai!</h3>
+                <p id="result-student-info" class="text-sm font-semibold text-word mb-6">Nama (Kelas)</p>
+
+                <div class="bg-gray-50 rounded-xl p-6 mb-6 border border-gray-200 inline-block min-w-[220px]">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Nilai Kamu</p>
+                    <p id="result-score" class="text-5xl font-extrabold text-word">0</p>
+                    <p id="result-detail" class="text-xs text-gray-600 mt-2">Benar 0 dari 15 Soal</p>
+                </div>
+
+                <div id="sheets-sync-status" class="mb-6 p-3 rounded-lg text-xs font-medium"></div>
+
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button onclick="reviewAnswers()" class="px-5 py-2.5 bg-blue-100 text-word font-bold rounded-lg hover:bg-blue-200 transition text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass"></i> Lihat Pembahasan
+                    </button>
+                    <button onclick="resetQuiz()" class="px-5 py-2.5 bg-word text-white font-bold rounded-lg hover:bg-word-dark transition text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> Ulangi Kuis
+                    </button>
+                </div>
+
+                <div id="quiz-review" class="hidden mt-8 text-left border-t pt-6">
+                    <h4 class="font-bold text-gray-800 text-base mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-word"></i> Pembahasan Soal
+                    </h4>
+                    <div id="review-container" class="space-y-4"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PENGEMBANG SECTION -->
+        <section id="content-pengembang" class="tab-content">
+            <div class="glass rounded-2xl shadow-xl border border-gray-100 overflow-hidden p-6 sm:p-10 max-w-4xl mx-auto">
+                <div class="flex items-center gap-3 mb-6 border-b pb-4">
+                    <div class="bg-word text-white p-3 rounded-xl shadow-md">
+                        <i class="fa-solid fa-id-card text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Profil Pengembang Media</h2>
+                        <p class="text-xs sm:text-sm text-gray-500">Informasi penyusun dan spesifikasi teknologi media pembelajaran</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                    <div class="md:col-span-1 bg-gradient-to-b from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 text-center shadow-sm">
+                        <img src="https://iili.io/nV4kv3X.md.jpg" alt="Sandi Kurnianto Koniyo, S.Pd" class="w-28 h-28 rounded-full object-cover mx-auto mb-4 shadow-lg border-4 border-white">
+                        <h3 class="font-bold text-gray-800 text-lg">Sandi Kurnianto Koniyo, S.Pd</h3>
+                        <p class="text-xs font-semibold text-word mt-1 bg-blue-100 px-3 py-1 rounded-full inline-block">Guru Pengajar Informatika</p>
+                        
+                        <div class="mt-4 pt-4 border-t border-blue-200/80 text-xs text-gray-600 space-y-2 text-left">
+                            <p class="flex items-center gap-2"><i class="fa-solid fa-school text-word"></i> <span><strong>Instansi:</strong> MTsN 2 Kab. Gorontalo</span></p>
+                            <p class="flex items-center gap-2"><i class="fa-solid fa-graduation-cap text-word"></i> <span><strong>Mata Pelajaran:</strong> Informatika</span></p>
+                            <p class="flex items-center gap-2"><i class="fa-solid fa-users text-word"></i> <span><strong>Sasaran:</strong> Kelas IX (Sembilan)</span></p>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2 space-y-6">
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <h4 class="font-bold text-gray-800 text-base mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-bullseye text-word"></i> Tujuan Pengembangan
+                            </h4>
+                            <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                                Media pembelajaran berbasis Web HTML5 interaktif ini dirancang untuk mempermudah siswa MTs Negeri 2 Kabupaten Gorontalo dalam memahami materi Pengolahan Dokumen Microsoft Word. Dilengkapi materi terstruktur dan kuis evaluasi yang langsung terintegrasi dengan rekap nilai Google Spreadsheet pengajar secara real-time.
+                            </p>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                            <h4 class="font-bold text-gray-800 text-base mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-code text-word"></i> Spesifikasi Teknologi
+                            </h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div class="bg-gray-50 border p-2.5 rounded-lg text-center">
+                                    <i class="fa-brands fa-html5 text-orange-600 text-xl mb-1"></i>
+                                    <p class="font-bold text-xs text-gray-800">HTML5</p>
+                                    <span class="text-[10px] text-gray-500">Struktur Utama</span>
+                                </div>
+                                <div class="bg-gray-50 border p-2.5 rounded-lg text-center">
+                                    <i class="fa-brands fa-css3-alt text-blue-600 text-xl mb-1"></i>
+                                    <p class="font-bold text-xs text-gray-800">Tailwind CSS</p>
+                                    <span class="text-[10px] text-gray-500">Desain & Responsif</span>
+                                </div>
+                                <div class="bg-gray-50 border p-2.5 rounded-lg text-center">
+                                    <i class="fa-brands fa-js text-yellow-500 text-xl mb-1"></i>
+                                    <p class="font-bold text-xs text-gray-800">JavaScript ES6</p>
+                                    <span class="text-[10px] text-gray-500">Logika Interaktif</span>
+                                </div>
+                                <div class="bg-gray-50 border p-2.5 rounded-lg text-center">
+                                    <i class="fa-solid fa-file-excel text-green-600 text-xl mb-1"></i>
+                                    <p class="font-bold text-xs text-gray-800">Google Apps Script</p>
+                                    <span class="text-[10px] text-gray-500">Integrasi Sheets</span>
+                                </div>
+                                <div class="bg-gray-50 border p-2.5 rounded-lg text-center">
+                                    <i class="fa-brands fa-github text-gray-800 text-xl mb-1"></i>
+                                    <p class="font-bold text-xs text-gray-800">GitHub Pages</p>
+                                    <span class="text-[10px] text-gray-500">Media Hosting</span>
+                                </div>
+                                <div class="bg-gray-50 border p-2.5 rounded-lg text-center">
+                                    <i class="fa-solid fa-font-awesome text-indigo-600 text-xl mb-1"></i>
+                                    <p class="font-bold text-xs text-gray-800">Font Awesome</p>
+                                    <span class="text-[10px] text-gray-500">Ikon Visual</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DAFTAR PUSTAKA SECTION -->
+        <section id="content-pustaka" class="tab-content">
+            <div class="glass rounded-2xl shadow-xl border border-gray-100 overflow-hidden p-6 sm:p-10 max-w-4xl mx-auto">
+                <div class="flex items-center gap-3 mb-6 border-b pb-4">
+                    <div class="bg-word text-white p-3 rounded-xl shadow-md">
+                        <i class="fa-solid fa-book-bookmark text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Daftar Pustaka & Rujukan</h2>
+                        <p class="text-xs sm:text-sm text-gray-500">Sumber referensi materi penyusunan modul pengolahan dokumen</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 text-xs sm:text-sm text-gray-700">
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl hover:border-word transition flex items-start gap-3 shadow-sm">
+                        <div class="bg-blue-100 text-word p-2 rounded-lg mt-0.5"><i class="fa-solid fa-book"></i></div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi. (2021).</p>
+                            <p class="text-gray-600 italic">Buku Panduan Guru dan Buku Siswa Informatika SMP/MTs Kelas IX.</p>
+                            <p class="text-xs text-gray-500 mt-1">Jakarta: Pusat Kurikulum dan Perbukuan, Badan Standar, Kurikulum, dan Asesmen Pendidikan.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl hover:border-word transition flex items-start gap-3 shadow-sm">
+                        <div class="bg-blue-100 text-word p-2 rounded-lg mt-0.5"><i class="fa-solid fa-globe"></i></div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Microsoft Corporation. (2023).</p>
+                            <p class="text-gray-600 italic">Microsoft Word Documentation, Help & Learning Center.</p>
+                            <p class="text-xs text-gray-500 mt-1">Diakses dari: https://support.microsoft.com/word</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl hover:border-word transition flex items-start gap-3 shadow-sm">
+                        <div class="bg-blue-100 text-word p-2 rounded-lg mt-0.5"><i class="fa-solid fa-laptop-file"></i></div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Sitarani, A. & Wahyono, E. (2020).</p>
+                            <p class="text-gray-600 italic">Aplikasi Pengolah Kata dalam Pembelajaran Teknologi Informasi dan Komunikasi.</p>
+                            <p class="text-xs text-gray-500 mt-1">Yogyakarta: Penerbit Andi.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl hover:border-word transition flex items-start gap-3 shadow-sm">
+                        <div class="bg-blue-100 text-word p-2 rounded-lg mt-0.5"><i class="fa-solid fa-graduation-cap"></i></div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Tim Pengembang Kurikulum Informatika MTs. (2023).</p>
+                            <p class="text-gray-600 italic">Modul Ajar Informatika Kelas IX: Domain Teknologi Informasi dan Komunikasi (TIK).</p>
+                            <p class="text-xs text-gray-500 mt-1">Gorontalo: Kementerian Agama Kabupaten Gorontalo.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-blue-50 border border-blue-200 p-4 rounded-xl flex items-center gap-3">
+                    <i class="fa-solid fa-circle-check text-word text-xl"></i>
+                    <p class="text-xs text-blue-900 leading-relaxed">
+                        Seluruh materi yang disajikan dalam media ini telah disesuaikan dengan Alur Tujuan Pembelajaran (ATP) Mata Pelajaran Informatika Kelas IX Kurikulum Merdeka.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Integrasi Google Spreadsheet & GitHub -->
+    <div id="sheets-modal" class="fixed inset-0 bg-black/60 z-[70] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel text-green-600"></i> Pengaturan Google Sheets
+                </h3>
+                <button onclick="closeSpreadsheetConfig()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+            </div>
+
+            <div class="space-y-4 text-xs text-gray-700">
+                <div>
+                    <label class="block font-bold text-gray-800 mb-1">URL Webhook Web App Apps Script:</label>
+                    <input type="text" id="webhook-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono focus:ring-2 focus:ring-word outline-none text-xs">
+                </div>
+
+                <div class="bg-gray-50 p-3.5 rounded-xl border border-gray-200">
+                    <h4 class="font-bold text-gray-800 mb-1 flex items-center gap-1.5 text-xs">
+                        <i class="fa-solid fa-code text-word"></i> Kode Google Apps Script (GAS):
+                    </h4>
+                    <p class="text-[11px] text-gray-500 mb-2">Buka Google Sheets &gt; Ekstensi &gt; Apps Script, tempelkan kode berikut:</p>
+                    <pre class="bg-gray-900 text-green-400 p-3 rounded-lg font-mono overflow-x-auto text-[10px] select-all">
+function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = JSON.parse(e.postData.contents);
+    sheet.appendRow([
+      data.tanggal || new Date().toLocaleString("id-ID"),
+      data.nama,
+      data.kelas,
+      data.skor,
+      data.benar + " / " + data.total
+    ]);
+    return ContentService.createTextOutput(JSON.stringify({"result":"success"})).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({"result":"error", "message": err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+                </div>
+            </div>
+
+            <div class="mt-5 flex justify-end gap-2 border-t pt-3">
+                <button onclick="saveSpreadsheetConfig()" class="px-4 py-2 bg-word text-white font-semibold rounded-lg hover:bg-word-dark transition text-xs">
+                    Simpan URL
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="custom-alert-modal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-5 text-center">
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <p id="custom-alert-message" class="text-sm font-medium text-gray-800 mb-4">Pesan peringatan</p>
+            <button onclick="closeCustomAlert()" class="w-full py-2 bg-word text-white font-semibold rounded-lg hover:bg-word-dark transition text-xs">
+                Mengerti
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-400 py-4 text-center text-xs mt-8">
+        <p>© MTs Negeri 2 Kabupaten Gorontalo | Guru Pengajar: Sandi Kurnianto Koniyo, S.Pd</p>
+    </footer>
+
+    <script>
+        class AudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.isPlayingBGM = false;
+                this.sfxMuted = false;
+                this.bgmTimer = null;
+                this.noteIndex = 0;
+                
+                this.melody = [
+                    523.25, 659.25, 783.99, 1046.50,
+                    659.25, 783.99, 880.00, 1046.50,
+                    587.33, 698.46, 880.00, 1174.66,
+                    659.25, 783.99, 1046.50, 1318.51
+                ];
+                this.bass = [
+                    130.81, 164.81, 174.61, 196.00,
+                    130.81, 164.81, 174.61, 196.00
+                ];
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playBGM() {
+                this.init();
+                if (this.isPlayingBGM) return;
+                this.isPlayingBGM = true;
+                this.noteIndex = 0;
+
+                const stepDuration = 220;
+                this.bgmTimer = setInterval(() => {
+                    if (!this.isPlayingBGM) return;
+                    
+                    const freq = this.melody[this.noteIndex % this.melody.length];
+                    const bassFreq = this.bass[Math.floor(this.noteIndex / 2) % this.bass.length];
+
+                    this.playSynthNote(freq, 'triangle', 0.15, 0.08);
+                    
+                    if (this.noteIndex % 2 === 0) {
+                        this.playSynthNote(bassFreq, 'sine', 0.2, 0.12);
+                    }
+
+                    if (this.noteIndex % 4 === 2) {
+                        this.playNoisePercussion();
+                    }
+
+                    this.noteIndex++;
+                }, stepDuration);
+            }
+
+            stopBGM() {
+                this.isPlayingBGM = false;
+                if (this.bgmTimer) {
+                    clearInterval(this.bgmTimer);
+                    this.bgmTimer = null;
+                }
+            }
+
+            playSynthNote(freq, type, duration, vol) {
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {}
+            }
+
+            playNoisePercussion() {
+                if (!this.ctx) return;
+                try {
+                    const bufferSize = this.ctx.sampleRate * 0.03;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const output = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        output[i] = Math.random() * 2 - 1;
+                    }
+
+                    const whiteNoise = this.ctx.createBufferSource();
+                    whiteNoise.buffer = buffer;
+
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.03, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
+
+                    whiteNoise.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    whiteNoise.start();
+                } catch(e) {}
+            }
+
+            playClickSFX() {
+                if (this.sfxMuted) return;
+                this.init();
+                this.playSynthNote(800, 'sine', 0.06, 0.1);
+            }
+
+            playCorrectSFX() {
+                if (this.sfxMuted) return;
+                this.init();
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                    setTimeout(() => {
+                        this.playSynthNote(freq, 'triangle', 0.15, 0.12);
+                    }, i * 70);
+                });
+            }
+
+            playWrongSFX() {
+                if (this.sfxMuted) return;
+                this.init();
+                this.playSynthNote(220, 'sawtooth', 0.25, 0.15);
+            }
+
+            playFanfareSFX() {
+                if (this.sfxMuted) return;
+                this.init();
+                const fanfareNotes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                fanfareNotes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playSynthNote(freq, 'triangle', 0.3, 0.2);
+                    }, idx * 100);
+                });
+            }
+        }
+
+        const audio = new AudioEngine();
+
+        function toggleBGM() {
+            const btnIcon = document.getElementById('bgm-icon');
+            const statusText = document.getElementById('bgm-status');
+            const visualizer = document.getElementById('visualizer');
+
+            if (audio.isPlayingBGM) {
+                audio.stopBGM();
+                btnIcon.className = "fa-solid fa-music text-sm";
+                statusText.innerText = "Mati";
+                visualizer.classList.add('hidden');
+            } else {
+                audio.playBGM();
+                btnIcon.className = "fa-solid fa-pause text-sm";
+                statusText.innerText = "Aktif";
+                visualizer.classList.remove('hidden');
+            }
+        }
+
+        function toggleMuteSFX() {
+            audio.sfxMuted = !audio.sfxMuted;
+            const icon = document.getElementById('sfx-icon');
+            if (audio.sfxMuted) {
+                icon.className = "fa-solid fa-volume-xmark text-red-400";
+            } else {
+                icon.className = "fa-solid fa-volume-high";
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.materi-btn')) {
+                audio.playClickSFX();
+            }
+        });
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        let currentMateriIndex = 0;
+        const totalMateri = 7;
+        let studentData = { name: '', class: '' };
+        let webhookUrl = localStorage.getItem('mts_word_webhook_url') || '';
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+
+        function showCustomAlert(msg) {
+            document.getElementById('custom-alert-message').innerText = msg;
+            document.getElementById('custom-alert-modal').classList.remove('hidden');
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('custom-alert-modal').classList.add('hidden');
+        }
+
+        function openSpreadsheetConfig() {
+            document.getElementById('webhook-url-input').value = webhookUrl;
+            document.getElementById('sheets-modal').classList.remove('hidden');
+        }
+
+        function closeSpreadsheetConfig() {
+            document.getElementById('sheets-modal').classList.add('hidden');
+        }
+
+        function saveSpreadsheetConfig() {
+            const url = document.getElementById('webhook-url-input').value.trim();
+            webhookUrl = url;
+            localStorage.setItem('mts_word_webhook_url', url);
+            closeSpreadsheetConfig();
+            showCustomAlert("URL Google Sheets Webhook berhasil disimpan!");
+        }
+
+        function switchTab(tabId) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(t => t.classList.remove('active'));
+
+            const activeTab = document.getElementById(`content-${tabId}`);
+            if (activeTab) activeTab.classList.add('active');
+
+            const navBtns = document.querySelectorAll('.tab-btn');
+            navBtns.forEach(btn => {
+                btn.classList.remove('text-white', 'border-white');
+                btn.classList.add('text-blue-200', 'border-transparent');
+            });
+
+            const currentNav = document.getElementById(`tab-${tabId}`);
+            if (currentNav) {
+                currentNav.classList.remove('text-blue-200', 'border-transparent');
+                currentNav.classList.add('text-white', 'border-white');
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showMateri(targetId) {
+            const sections = document.querySelectorAll('.materi-section');
+            sections.forEach(sec => sec.classList.add('hidden'));
+
+            const target = document.getElementById(targetId);
+            if (target) target.classList.remove('hidden');
+
+            const indexMap = { bab1:0, bab2:1, bab3:2, bab4:3, bab5:4, bab6:5, bab7:6 };
+            if (indexMap[targetId] !== undefined) {
+                currentMateriIndex = indexMap[targetId];
+            }
+
+            const btns = document.querySelectorAll('.materi-btn');
+            btns.forEach(btn => {
+                if (btn.getAttribute('data-target') === targetId) {
+                    btn.className = "w-full text-left px-3.5 py-2.5 rounded-lg bg-word text-white font-semibold text-sm transition-all materi-btn";
+                } else {
+                    btn.className = "w-full text-left px-3.5 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100 text-sm transition-all materi-btn";
+                }
+            });
+
+            updateMateriNavButtons();
+        }
+
+        function navigateMateri(step) {
+            const newIndex = currentMateriIndex + step;
+            if (newIndex >= 0 && newIndex < totalMateri) {
+                showMateri(`bab${newIndex + 1}`);
+            }
+        }
+
+        function updateMateriNavButtons() {
+            const prevBtn = document.getElementById('btn-prev-materi');
+            const nextBtn = document.getElementById('btn-next-materi');
+
+            if (currentMateriIndex === 0) {
+                prevBtn.disabled = true;
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                prevBtn.disabled = false;
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            if (currentMateriIndex === totalMateri - 1) {
+                nextBtn.disabled = true;
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        const questions = [
+            // 10 Pilihan Ganda
+            {
+                text: "1. Format ekstensi file standar untuk dokumen Microsoft Word versi 2007 ke atas adalah...",
+                type: "Pilihan Ganda",
+                options: ["A. .docx", "B. .xlsx", "C. .pptx", "D. .txt"],
+                answer: 0,
+                explanation: "Sejak Microsoft Word 2007, ekstensi file standar menggunakan format .docx yang berbasis Open XML."
+            },
+            {
+                text: "2. Kombinasi tombol pintas (shortcut) keyboard yang digunakan untuk mencetak dokumen (Print) adalah...",
+                type: "Pilihan Ganda",
+                options: ["A. Ctrl + S", "B. Ctrl + P", "C. Ctrl + C", "D. Ctrl + V"],
+                answer: 1,
+                explanation: "Ctrl + P digunakan untuk membuka menu Print (Cetak Dokumen)."
+            },
+            {
+                text: "3. Fitur perintah pada Microsoft Word yang digunakan untuk menebalkan huruf atau teks adalah...",
+                type: "Pilihan Ganda",
+                options: ["A. Bold (Ctrl + B)", "B. Italic (Ctrl + I)", "C. Underline (Ctrl + U)", "D. Strikethrough"],
+                answer: 0,
+                explanation: "Bold (Ctrl + B) berfungsi memberi efek cetak tebal pada teks."
+            },
+            {
+                text: "4. Perintah 'Justify' pada grup Paragraph berfungsi untuk...",
+                type: "Pilihan Ganda",
+                options: [
+                    "A. Meratakan teks di bagian kiri saja",
+                    "B. Meratakan teks tepat di tengah-tengah",
+                    "C. Meratakan teks di bagian kanan saja",
+                    "D. Meratakan teks di sebelah kiri dan kanan secara seimbang"
+                ],
+                answer: 3,
+                explanation: "Justify (Ctrl + J) digunakan untuk meratakan batas teks di sebelah kiri dan kanan sekaligus."
+            },
+            {
+                text: "5. Menu Tab yang berfungsi untuk menyisipkan tabel, gambar, bentuk (shapes), dan grafik adalah...",
+                type: "Pilihan Ganda",
+                options: ["A. Tab Home", "B. Tab Insert", "C. Tab Layout", "D. Tab View"],
+                answer: 1,
+                explanation: "Tab Insert berisi perintah untuk memasukkan berbagai elemen non-teks seperti tabel, gambar, bentuk visual, dan grafik."
+            },
+            {
+                text: "6. Kombinasi tombol keyboard yang digunakan untuk membatalkan perintah sebelumnya (Undo) adalah...",
+                type: "Pilihan Ganda",
+                options: ["A. Ctrl + Z", "B. Ctrl + Y", "C. Ctrl + X", "D. Ctrl + A"],
+                answer: 0,
+                explanation: "Ctrl + Z berfungsi untuk membatalkan tindakan atau perintah terakhir (Undo)."
+            },
+            {
+                text: "7. Komponen layar kerja Microsoft Word yang menampilkan judul/nama file yang sedang aktif berada di...",
+                type: "Pilihan Ganda",
+                options: ["A. Title Bar", "B. Status Bar", "C. Quick Access Toolbar", "D. Ribbon Bar"],
+                answer: 0,
+                explanation: "Title Bar terletak di bagian paling atas tengah layar kerja untuk menampilkan nama dokumen aktif."
+            },
+            {
+                text: "8. Orientasi pencetakan posisi kertas secara mendatar (horizontal) pada Microsoft Word dinamakan...",
+                type: "Pilihan Ganda",
+                options: ["A. Portrait", "B. Landscape", "C. Margins", "D. Size"],
+                answer: 1,
+                explanation: "Landscape memosisikan lembar kerja secara mendatar, sedangkan Portrait memosisikan kertas secara tegak."
+            },
+            {
+                text: "9. Jarak kosong antara tepi kertas bagian luar dengan batas area pengetikan teks dinamakan...",
+                type: "Pilihan Ganda",
+                options: ["A. Indentasi", "B. Spasi", "C. Margins", "D. Header"],
+                answer: 2,
+                explanation: "Margins mengatur batas jarak kosong tepi atas, bawah, kiri, dan kanan kertas."
+            },
+            {
+                text: "10. Tombol pintas keyboard untuk memilih atau menyorot seluruh isi teks dalam dokumen adalah...",
+                type: "Pilihan Ganda",
+                options: ["A. Ctrl + C", "B. Ctrl + V", "C. Ctrl + A", "D. Ctrl + F"],
+                answer: 2,
+                explanation: "Ctrl + A (Select All) berfungsi untuk memblok seluruh teks/konten dalam dokumen sekaligus."
+            },
+            // 5 Soal Benar / Salah
+            {
+                text: "11. [BENAR / SALAH] Perintah tombol pintas Ctrl + I digunakan untuk miringkan huruf (Italic).",
+                type: "Benar / Salah",
+                options: ["A. BENAR", "B. SALAH"],
+                answer: 0,
+                explanation: "Benar. Ctrl + I merupakan perintah shortcut untuk memberi efek miring (Italic) pada teks."
+            },
+            {
+                text: "12. [BENAR / SALAH] Menu Tab Layout digunakan untuk menyisipkan Grafik (Chart) dan Gambar ke dalam lembar kerja.",
+                type: "Benar / Salah",
+                options: ["A. BENAR", "B. SALAH"],
+                answer: 1,
+                explanation: "Salah. Menyisipkan Gambar dan Grafik dilakukan melalui Tab Insert, bukan Tab Layout."
+            },
+            {
+                text: "13. [BENAR / SALAH] Ekstensi format file .doc merupakan format dokumen Microsoft Word versi 2003 ke bawah.",
+                type: "Benar / Salah",
+                options: ["A. BENAR", "B. SALAH"],
+                answer: 0,
+                explanation: "Benar. Format .doc adalah ekstensi standar dokumen Word pada versi terdahulu (2003 ke bawah)."
+            },
+            {
+                text: "14. [BENAR / SALAH] Menekan tombol Ctrl + S pada keyboard akan secara otomatis menutup aplikasi Microsoft Word.",
+                type: "Benar / Salah",
+                options: ["A. BENAR", "B. SALAH"],
+                answer: 1,
+                explanation: "Salah. Ctrl + S digunakan untuk menyimpan dokumen (Save), bukan menutup aplikasi."
+            },
+            {
+                text: "15. [BENAR / SALAH] Status Bar berada di bagian bawah layar yang menunjukkan nomor halaman dan jumlah kata.",
+                type: "Benar / Salah",
+                options: ["A. BENAR", "B. SALAH"],
+                answer: 0,
+                explanation: "Benar. Status Bar terletak di bagian bawah layar untuk memberikan informasi statistik dokumen."
+            }
+        ];
+
+        function startQuiz() {
+            const nameInput = document.getElementById('student-name').value.trim();
+            const classInput = document.getElementById('student-class').value.trim();
+
+            if (!nameInput || !classInput) {
+                audio.playWrongSFX();
+                showCustomAlert("Mohon lengkapi Nama Lengkap dan Kelas kamu terlebih dahulu sebelum memulai kuis!");
+                return;
+            }
+
+            studentData.name = nameInput;
+            studentData.class = classInput;
+
+            currentQuestionIndex = 0;
+            userAnswers = new Array(questions.length).fill(null);
+
+            document.getElementById('quiz-intro').classList.add('hidden');
+            document.getElementById('quiz-area').classList.remove('hidden');
+            
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestionIndex];
+            
+            document.getElementById('quiz-progress-text').innerText = `Soal ${currentQuestionIndex + 1} dari ${questions.length}`;
+            document.getElementById('quiz-type-badge').innerText = q.type;
+            
+            const progressPercent = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${progressPercent}%`;
+
+            document.getElementById('question-text').innerText = q.text;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const isSelected = userAnswers[currentQuestionIndex] === idx;
+                const optHtml = `
+                    <label class="block cursor-pointer">
+                        <input type="radio" name="quiz-option" class="hidden radio-custom" ${isSelected ? 'checked' : ''} onchange="selectAnswer(${idx})">
+                        <div class="p-3.5 border border-gray-200 rounded-xl flex items-center transition hover:border-word bg-white">
+                            <div class="circle w-5 h-5 rounded-full border-2 border-gray-300 mr-3 flex items-center justify-center flex-shrink-0">
+                                <div class="w-2 h-2 rounded-full bg-white"></div>
+                            </div>
+                            <span class="text-xs sm:text-sm font-medium text-gray-700">${opt}</span>
+                        </div>
+                    </label>
+                `;
+                container.insertAdjacentHTML('beforeend', optHtml);
+            });
+
+            // Handle Navigation Button States
+            const prevBtn = document.getElementById('btn-quiz-prev');
+            const nextBtn = document.getElementById('btn-quiz-next');
+            const submitBtn = document.getElementById('btn-quiz-submit');
+
+            prevBtn.style.visibility = currentQuestionIndex === 0 ? 'hidden' : 'visible';
+
+            if (currentQuestionIndex === questions.length - 1) {
+                nextBtn.classList.add('hidden');
+                submitBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                submitBtn.classList.add('hidden');
+            }
+        }
+
+        function selectAnswer(index) {
+            userAnswers[currentQuestionIndex] = index;
+            audio.playClickSFX();
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                audio.playClickSFX();
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (userAnswers[currentQuestionIndex] === null) {
+                audio.playWrongSFX();
+                showCustomAlert("Silakan pilih salah satu jawaban terlebih dahulu sebelum melanjutkan.");
+                return;
+            }
+            audio.playClickSFX();
+            currentQuestionIndex++;
+            renderQuestion();
+        }
+
+        function submitQuiz() {
+            if (userAnswers[currentQuestionIndex] === null) {
+                audio.playWrongSFX();
+                showCustomAlert("Silakan pilih jawaban untuk nomor terakhir ini.");
+                return;
+            }
+            
+            let correctCount = 0;
+            userAnswers.forEach((ans, idx) => {
+                if (ans === questions[idx].answer) {
+                    correctCount++;
+                }
+            });
+            
+            const score = Math.round((correctCount / questions.length) * 100);
+            
+            document.getElementById('quiz-area').classList.add('hidden');
+            document.getElementById('quiz-result').classList.remove('hidden');
+            
+            document.getElementById('result-student-info').innerText = `${studentData.name} (${studentData.class})`;
+            document.getElementById('result-score').innerText = score;
+            document.getElementById('result-detail').innerText = `Benar ${correctCount} dari ${questions.length} Soal`;
+            
+            if (score >= 70) {
+                triggerConfetti();
+                audio.playFanfareSFX();
+            } else {
+                audio.playCorrectSFX();
+            }
+
+            sendResultToGoogleSheet(score, correctCount);
+        }
+
+        function sendResultToGoogleSheet(score, correctCount) {
+            const statusEl = document.getElementById('sheets-sync-status');
+            
+            if (!webhookUrl) {
+                statusEl.className = "mb-6 p-3 rounded-xl text-xs bg-gray-100 text-gray-600 border border-gray-200";
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-info mr-1"></i> Nilai tersimpan secara lokal (URL Spreadsheet Guru belum diatur).';
+                return;
+            }
+
+            statusEl.className = "mb-6 p-3 rounded-xl text-xs bg-blue-50 text-blue-700 border border-blue-200 animate-pulse";
+            statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengirimkan nilai ke Google Spreadsheet Pak Guru...';
+
+            const payload = {
+                nama: studentData.name,
+                kelas: studentData.class,
+                skor: score,
+                benar: correctCount,
+                total: questions.length,
+                tanggal: new Date().toLocaleString('id-ID')
+            };
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                statusEl.className = "mb-6 p-3 rounded-xl text-xs bg-green-50 text-green-700 border border-green-200";
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Nilai berhasil tersimpan secara otomatis di Google Spreadsheet!';
+            })
+            .catch(() => {
+                statusEl.className = "mb-6 p-3 rounded-xl text-xs bg-red-50 text-red-700 border border-red-200";
+                statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Periksa koneksi internet atau URL Webhook.';
+            });
+        }
+
+        function reviewAnswers() {
+            const reviewSection = document.getElementById('quiz-review');
+            reviewSection.classList.remove('hidden');
+            
+            const container = document.getElementById('review-container');
+            container.innerHTML = '';
+            
+            questions.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = userAns === q.answer;
+                
+                const itemHtml = `
+                <div class="border rounded-xl p-4 ${isCorrect ? 'bg-green-50/60 border-green-200' : 'bg-red-50/60 border-red-200'}">
+                    <p class="font-bold text-xs sm:text-sm text-gray-800 mb-2">${q.text}</p>
+                    <div class="text-xs mb-2">
+                        <span class="font-semibold text-gray-600">Jawabanmu:</span> 
+                        <span class="${isCorrect ? 'text-green-700 font-bold' : 'text-red-600 line-through'}">${q.options[userAns]}</span>
+                        ${!isCorrect ? `<br><span class="font-semibold text-gray-600 mt-1 inline-block">Jawaban Benar:</span> <span class="text-green-700 font-bold">${q.options[q.answer]}</span>` : ''}
+                    </div>
+                    <div class="text-xs bg-white p-2.5 rounded-lg border border-gray-100 text-gray-700 leading-relaxed">
+                        <strong class="text-amber-600"><i class="fa-solid fa-lightbulb"></i> Pembahasan:</strong> ${q.explanation}
+                    </div>
+                </div>
+                `;
+                container.insertAdjacentHTML('beforeend', itemHtml);
+            });
+            
+            reviewSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetQuiz() {
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-review').classList.add('hidden');
+            document.getElementById('quiz-intro').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
